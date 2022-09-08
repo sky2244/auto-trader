@@ -58,15 +58,15 @@ def run(runner, sleep_second, debug):
 
 def main_loop():
     args = parse_arg()
-    is_debug = args.debug or args.debug_operation
 
     logging.debug(f'select algorithm is {args.algorithm}')
     bitflyer.set_api_key_secret_file(
         os.path.join(os.environ['HOME'], '.bitflyer_token'))
-    trade_operator = Operator(bitflyer, is_debug)
+    trade_operator = Operator(bitflyer, args.debug or args.debug_operation)
     algorithm = select_technic.get_algorithm(args.algorithm)
     runner = select_runner.get_runner(args.runner)(
-        trade_operator, is_debug, algorithm, send_line_message(args.debug))
+        trade_operator, args.debug, args.debug_operation,
+        algorithm, send_line_message(args.debug))
     viewer.set_runner(runner)
 
     try:
@@ -102,10 +102,12 @@ def parse_arg():
     parser.add_argument('--algorithm', default='BB',
                         help='select trade algorithm')
     parser.add_argument('--runner', default='buy_steps', help='select runner')
-    parser.add_argument('--sleep', default=30, help='trader run span(seconds)')
-    parser.add_argument('--debug', default=False, help='Run debug mode')
+    parser.add_argument('--sleep', default=30, type=int,
+                        help='trader run span(seconds)')
+    parser.add_argument('--debug', default=False,
+                        action='store_true', help='Run debug mode')
     parser.add_argument('--debug-operation', default=False,
-                        help='Debug operation')
+                        action='store_true', help='Debug operation')
 
     return parser.parse_args()
 

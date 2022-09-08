@@ -15,7 +15,7 @@ DUMMY_DATA = './dummy_data/sample2.csv'
 class Scalping(Runner):
     COMPLETE_ORDER = []
 
-    def __init__(self, trade_operator, debug, algorithm, notify):
+    def __init__(self, trade_operator, debug, debug_operation, algorithm, notify):
         self.target_profit = 1.008
         self.loss_profit = 0.995
         self.size = 0.001
@@ -27,13 +27,15 @@ class Scalping(Runner):
         self.db = database.DB('../auto_trade.db', 'trade',
                               Order.k, Order.k_t, 'id')
         self.debug = debug
+        self.debug_operation = debug_operation
         self.notify = notify
 
     def auto_trade(self):
         current_price = candles.get_current_price(self.debug, bitflyer)
         self.candles = self.candles.append(
             {'Close': current_price}, ignore_index=True)
-        self.update_order_state(self.orders, self.db, self.debug)
+        self.update_order_state(self.orders, self.db,
+                                self.debug or self.debug_operation)
         self.trim_finished_order()
 
         result_flg = self.algorithm.get_result(self.candles, 'Close')
@@ -199,7 +201,7 @@ class Scalping(Runner):
                 buy_order.reset_pair_id()
 
     def dump_order(self):
-        if self.debug:
+        if self.debug or self.debug_operation:
             return
 
         order_dicts = [x.to_dict() for x in self.orders]
