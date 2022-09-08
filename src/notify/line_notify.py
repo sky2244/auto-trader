@@ -1,4 +1,5 @@
 import requests
+import os
 
 
 class LineNotify:
@@ -7,7 +8,7 @@ class LineNotify:
             self.line_notify_token = token
         else:
             if toke_file is None:
-                toke_file = '~/.line_token'
+                toke_file = os.path.join(os.environ['HOME'], '.line_token')
             self.line_notify_token = open(toke_file).read().strip()
         self.line_notify_api = "https://notify-api.line.me/api/notify"
         self.headers = {

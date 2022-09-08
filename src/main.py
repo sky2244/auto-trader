@@ -9,13 +9,14 @@ from notify.line_notify import LineNotify
 
 from datetime import datetime
 
-import warnings
-import time
-import pandas as pd
-import logging
 import argparse
-import traceback
+import logging
+import os
+import pandas as pd
 import sys
+import time
+import traceback
+import warnings
 
 warnings.simplefilter('ignore', FutureWarning)
 
@@ -60,6 +61,8 @@ def main_loop():
     is_debug = args.debug or args.debug_operation
 
     logging.debug(f'select algorithm is {args.algorithm}')
+    bitflyer.set_api_key_secret_file(
+        os.path.join(os.environ['HOME'], '.bitflyer_token'))
     trade_operator = Operator(bitflyer, is_debug)
     algorithm = select_technic.get_algorithm(args.algorithm)
     runner = select_runner.get_runner(args.runner)(
