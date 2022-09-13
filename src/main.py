@@ -21,7 +21,7 @@ import warnings
 warnings.simplefilter('ignore', FutureWarning)
 
 logging.basicConfig(filename='../runner.log', format='%(asctime)s %(message)s',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 pd.options.display.float_format = '{:.2f}'.format
 
@@ -87,13 +87,17 @@ def main_loop():
 
 
 def send_line_message(debug):
+    line_notify = LineNotify()
+
     def send_message(msg):
-        logging.debug(msg)
+        logging.info(msg)
         output_log = '%s: %s' % (datetime.fromtimestamp(time.time()), msg)
         print(output_log)
-        if not debug:
-            line_notify = LineNotify()
-            line_notify.send(output_log)
+        try:
+            if not debug:
+                line_notify.send(output_log)
+        except Exception as e:
+            print('notify error', e.message)
     return send_message
 
 

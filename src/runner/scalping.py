@@ -16,7 +16,7 @@ class Scalping(Runner):
     COMPLETE_ORDER = []
 
     def __init__(self, trade_operator, debug, debug_operation, algorithm, notify):
-        self.target_profit = 1.008
+        self.target_profit = 1.005
         self.loss_profit = 0.995
         self.size = 0.001
         self.minute_limit = 5
@@ -51,8 +51,8 @@ class Scalping(Runner):
         else:
             self.sell_operate(order, current_price)
 
-        if len(self.candles) > 3000:
-            self.candles = self.candles[-1000:]
+        if len(self.candles) > 500:
+            self.candles = self.candles[-100:]
         self.dump_order()
 
     def trim_finished_order(self):
