@@ -34,8 +34,8 @@ class Scalping(Runner):
         current_price = candles.get_current_price(self.debug, bitflyer)
         self.candles = self.candles.append(
             {'Close': current_price}, ignore_index=True)
-        self.update_order_state(self.orders, self.db,
-                                self.debug or self.debug_operation)
+        self.update_order_state(self.debug or self.debug_operation)
+        self.update_buy_order_state()
         self.trim_finished_order()
 
         if len(self.orders) == 0:
@@ -151,41 +151,39 @@ class Scalping(Runner):
             if len(target_orders) == 0:
                 order.pair_id = None
 
-    def update_order_state(self, orders, db, debug):
-        if len(orders) == 0:
+    def update_order_state(self, debug):
+        if len(self.orders) == 0:
             return
 
         if debug:
-            for order in orders:
+            for order in self.orders:
                 order.update_state('COMPLETED')
+            return
 
-        else:
-            MAX_RETRY = 3
-            child_order = bitflyer.get_childorder(count=1000)
-            id_key = 'child_order_acceptance_id'
-            id_maps = {x[id_key]: x for x in child_order.json()}
-            for order in orders:
-                if order.order_complete:
-                    continue
+        MAX_RETRY = 3
+        child_order = bitflyer.get_childorder(count=1000)
+        id_key = 'child_order_acceptance_id'
+        id_maps = {x[id_key]: x for x in child_order.json()}
+        for order in self.orders:
+            if order.order_complete:
+                continue
 
-                if order.id not in id_maps:
-                    self.notify(f"not found {order.id} order:{order}")
-                    order.retry += 1
-                    if order.retry >= MAX_RETRY:
-                        self.notify(f"remove {order.side} order:{order}")
-                        order.update_state('CANCELED')
-                else:
-                    order_state = id_maps[order.id]['child_order_state']
-                    order.update_state(order_state)
-                    order.order_time = id_maps[order.id]['child_order_date']
-                    order.commission = id_maps[order.id]['total_commission']
+            if order.id not in id_maps:
+                self.notify(f"not found {order.id} order:{order}")
+                order.retry += 1
+                if order.retry >= MAX_RETRY:
+                    self.notify(f"remove {order.side} order:{order}")
+                    order.update_state('CANCELED')
+            else:
+                order_state = id_maps[order.id]['child_order_state']
+                order.update_state(order_state)
+                order.order_time = id_maps[order.id]['child_order_date']
+                order.commission = id_maps[order.id]['total_commission']
 
-        self.update_buy_order_state(orders)
-
-    def update_buy_order_state(self, orders):
-        buy_orders = list(filter(lambda x: x.side == 'buy', orders))
+    def update_buy_order_state(self):
+        buy_orders = list(filter(lambda x: x.side == 'buy', self.orders))
         sell_orders = list(
-            filter(lambda x: x.side == 'sell' and x.delete_flag, orders))
+            filter(lambda x: x.side == 'sell' and x.delete_flag, self.orders))
         for sell_order in sell_orders:
             buy_order = [x for x in buy_orders if x.pair_id == sell_order.id]
             if len(buy_order) == 0:
