@@ -81,7 +81,7 @@ class Order:
             self.delete_flag = True
         elif order_state in ['REJECTED', 'EXPIRED', 'CANCELED']:
             self.delete_flag = True
-            self.id = None
+            # self.id = None
             # request delete?
         self.state = order_state
 
