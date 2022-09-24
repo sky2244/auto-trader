@@ -70,7 +70,7 @@ class Scalping(Runner):
             if not order.is_sellable(price, self.target_profit):
                 continue
 
-            if price < self.candles[-2]:
+            if price > self.candles[-2]:
                 continue
             return order
         for order in reversed(self.orders):
