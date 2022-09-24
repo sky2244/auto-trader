@@ -38,18 +38,19 @@ class Scalping(Runner):
                                 self.debug or self.debug_operation)
         self.trim_finished_order()
 
-        result_flg = self.algorithm.get_result(self.candles, 'Close')
-        if result_flg['buy_flg'] and len(self.orders) == 0:
-            self.buy_operate(current_price, self.size)
-
-        order = self.search_sellable_order(current_price)
-        if order is None:
-            if len(self.orders) > 0:
-                min_buy_price = self.orders[-1].price
-                logging.debug(
-                    f"Not Sell request on the market current:{current_price}, last buy:{min_buy_price} {(current_price / min_buy_price):2f}")
+        if len(self.orders) == 0:
+            result_flg = self.algorithm.get_result(self.candles, 'Close')
+            if result_flg['buy_flg']:
+                self.buy_operate(current_price, self.size)
         else:
-            self.sell_operate(order, current_price)
+            order = self.search_sellable_order(current_price)
+            if order is None:
+                if len(self.orders) > 0:
+                    min_buy_price = self.orders[-1].price
+                    logging.debug(
+                        f"Not Sell request on the market current:{current_price}, last buy:{min_buy_price} {(current_price / min_buy_price):2f}")
+            else:
+                self.sell_operate(order, current_price)
 
         if len(self.candles) > 500:
             self.candles = self.candles[-100:]
@@ -69,6 +70,8 @@ class Scalping(Runner):
             if not order.is_sellable(price, self.target_profit):
                 continue
 
+            if price < self.candles[-2]:
+                continue
             return order
         for order in reversed(self.orders):
             if not order.is_sellable(price, self.loss_profit, loss_cut=True):
