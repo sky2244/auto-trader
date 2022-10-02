@@ -52,8 +52,8 @@ class Scalping(Runner):
             else:
                 self.sell_operate(order, current_price)
 
-        if len(self.candles) > 500:
-            self.candles = self.candles[-100:]
+        if len(self.candles) > 10000:
+            self.candles = self.candles[-5000:]
         self.dump_order()
 
     def trim_finished_order(self):
@@ -70,7 +70,7 @@ class Scalping(Runner):
             if not order.is_sellable(price, self.target_profit):
                 continue
 
-            if price > self.candles[-2]:
+            if price > self.candles.iloc[-2]['Close']:
                 continue
             return order
         for order in reversed(self.orders):
