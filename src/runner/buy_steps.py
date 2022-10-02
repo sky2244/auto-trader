@@ -7,27 +7,28 @@ from trader import bitflyer
 import os
 import json
 
-DUMP_FILE_NAME = 'dump_order.txt'
-DUMMY_DATA = './dummy_data/sample2.csv'
-
-MAX_BUY = 30
-BUY_MAX_PRICE = 6000000
-
 
 class BuySteps(Runner):
     COMPLETE_ORDER = []
 
-    def __init__(self, trade_operator, debug, algorithm, notify):
-        self.target_profit = 0.995
-        self.size = 0.001
+    def __init__(self, conf, trade_operator, debug,
+                 debug_operation, algorithm, notify):
+        self.target_profit = conf.getfloat('Steps/target')
+        self.size = conf.getfloat('Steps/size')
+        self.max_buy = conf.getint('Steps/max_buy')
+        self.buy_max_price = 6000000
+        self.dump_file_name = conf.get('Runner/dump_file', 'dump_order.txt')
+
         self.trade_operator = trade_operator
-        self.candles = candles.get_init_candles(debug, DUMMY_DATA)
-        self.orders = self.init_server_order(debug, DUMP_FILE_NAME)
+        self.debug = debug
+        self.debug_operation = debug_operation
         self.algorithm = algorithm
+        self.notify = notify
+
+        self.candles = candles.get_init_candles()
+        self.orders = self.init_server_order(debug)
         self.db = database.DB('../auto_trade.db', 'trade',
                               Order.k, Order.k_t, 'id')
-        self.debug = debug
-        self.notify = notify
 
     def auto_trade(self):
         current_price = candles.get_current_price(self.debug, bitflyer)
@@ -111,17 +112,17 @@ class BuySteps(Runner):
 
         if buy_order[0].price < price:
             return False
-        if len(buy_order) >= MAX_BUY:
+        if len(buy_order) >= self.max_buy:
             return False
-        if price >= BUY_MAX_PRICE:
+        if price >= self.buy_max_price:
             return False
 
         return True
 
-    def init_server_order(self, debug=False, DUMP_FILE_NAME=''):
+    def init_server_order(self, debug=False):
         res = []
-        if os.path.exists(DUMP_FILE_NAME):
-            load_json = json.load(open(DUMP_FILE_NAME))
+        if os.path.exists(self.dump_file_name):
+            load_json = json.load(open(self.dump_file_name))
             for order in load_json:
                 res.append(Order(**order))
             self.remove_no_exist_pair_id(res)
@@ -207,9 +208,9 @@ class BuySteps(Runner):
                 buy_order.reset_pair_id()
 
     def dump_order(self):
-        if self.debug:
+        if self.debug or self.debug_operation:
             return
 
         order_dicts = [x.to_dict() for x in self.orders]
-        with open(DUMP_FILE_NAME, 'w') as fout:
+        with open(self.dump_file_name, 'w') as fout:
             fout.write(json.dumps(order_dicts))

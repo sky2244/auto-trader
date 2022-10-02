@@ -4,10 +4,10 @@ from technic import macd, rsi, bollinger_bands
 
 class BB_Macd_Rsi(Algorithm):
     def __init__(self):
+        self.name = 'bb_macd_rsi'
         self.bb = bollinger_bands.BB()
         self.macd = macd.Macd()
         self.rsi = rsi.Rsi()
-        pass
 
     def get_result(self, df, key):
         """

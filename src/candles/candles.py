@@ -3,8 +3,8 @@ import pandas as pd
 import requests
 
 
-def get_init_candles(is_debug, dummy_file=None):
-    if is_debug:
+def get_init_candles(dummy_file=None):
+    if dummy_file is not None:
         global debug_candles
         debug_candles = pd.read_csv(dummy_file).set_index('Time')
         candles = debug_candles[:1]

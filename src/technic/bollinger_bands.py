@@ -6,6 +6,7 @@ from .algorithm import Algorithm
 
 class BB(Algorithm):
     def __init__(self, duration=20, sigma=2, is_output=False):
+        self.name = 'bb'
         # ボリンジャーバンドの期間（基本は20）
         self.duration = duration
         # σの値
