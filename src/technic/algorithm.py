@@ -2,7 +2,7 @@
 
 class Algorithm:
     def __init__(self):
-        pass
+        self.name = ''
 
     def create_result(self, buy_flg, sell_flg):
         """
