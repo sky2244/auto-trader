@@ -3,6 +3,7 @@ from .algorithm import Algorithm
 
 class Rsi(Algorithm):
     def __init__(self, duration=14, rsi_low=30, rsi_up=70, is_output=False):
+        self.name = 'rsi'
         # RSIの期間（基本は14）
         self.duration = 14
 

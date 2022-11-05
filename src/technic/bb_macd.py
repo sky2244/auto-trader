@@ -5,6 +5,7 @@ import pandas as pd
 
 class BB_macd(Algorithm):
     def __init__(self):
+        self.name = 'bb_macd'
         pass
 
 

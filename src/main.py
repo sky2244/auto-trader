@@ -1,22 +1,23 @@
-from candles import candles
-from viewer import viewer
-from trader import bitflyer
-from trade_operator import Operator
-from technic import select_technic
-from runner import select_runner
-from output import debug_output
-from notify.line_notify import LineNotify
-
-from datetime import datetime
-
 import argparse
+import configparser
 import logging
 import os
-import pandas as pd
 import sys
 import time
 import traceback
 import warnings
+from datetime import datetime
+
+import pandas as pd
+
+from candles import candles
+from notify.line_notify import LineNotify
+from output import debug_output
+from runner import select_runner
+from technic import select_technic
+from trade_operator import Operator
+from trader import bitflyer
+from viewer import viewer
 
 warnings.simplefilter('ignore', FutureWarning)
 
@@ -24,9 +25,6 @@ logging.basicConfig(filename='../runner.log', format='%(asctime)s %(message)s',
                     level=logging.INFO)
 
 pd.options.display.float_format = '{:.2f}'.format
-
-DEBUG = True
-OPERATE_DEBUG = True
 
 
 def main():
@@ -39,9 +37,9 @@ def main():
         sys.exit()
 
 
-def run(runner, sleep_second, debug):
+def run(is_run_view, runner, sleep_second, debug):
     logging.debug('Init buy orders %s', runner.orders)
-    if not debug:
+    if is_run_view:
         viewer.run()
 
     count = 0
@@ -58,22 +56,34 @@ def run(runner, sleep_second, debug):
 
 def main_loop():
     args = parse_arg()
+    config = parse_config(args.config_file)
 
-    logging.debug(f'select algorithm is {args.algorithm}')
     bitflyer.set_api_key_secret_file(
         os.path.join(os.environ['HOME'], '.bitflyer_token'))
     trade_operator = Operator(bitflyer, args.debug or args.debug_operation)
-    algorithm = select_technic.get_algorithm(args.algorithm)
-    runner = select_runner.get_runner(args.runner)(
+
+    algorithm_name = config.get('Algorithm/name', 'bb')
+    if args.algorithm is not None:
+        algorithm_name = args.algorithm
+    algorithm = select_technic.get_algorithm(algorithm_name.lower())
+
+    runner_name = config.get('Runner/name', 'scalping')
+    if args.runner is not None:
+        runner_name = args.runner
+    runner = select_runner.get_runner(runner_name.lower())(
         trade_operator, args.debug, args.debug_operation,
         algorithm, send_line_message(args.debug))
+
+    logging.debug(f'select algorithm is {algorithm.name}')
+
     viewer.set_runner(runner)
+    is_run_view = (not args.debug) and config.getboolean('View/run', False)
 
     try:
-        sleep_second = args.sleep
+        sleep_second = int(config.get('Default/sleep', 0))
         if args.debug:
             sleep_second = 0
-        run(runner, sleep_second, args.debug)
+        run(is_run_view, runner, sleep_second, args.debug)
 
     except Exception as e:
         print(traceback.format_exc())
@@ -101,6 +111,12 @@ def send_line_message(debug):
     return send_message
 
 
+def parse_config(config_file):
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    return config
+
+
 def parse_arg():
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--algorithm', default='BB',
@@ -112,6 +128,8 @@ def parse_arg():
                         action='store_true', help='Run debug mode')
     parser.add_argument('--debug-operation', default=False,
                         action='store_true', help='Debug operation')
+    parser.add_argument('--config-file', required=True,
+                        help='select config file')
 
     return parser.parse_args()
 

@@ -7,6 +7,7 @@ import operator
 
 class Sma(Algorithm):
     def __init__(self, short_num=5, long_num=18, continue_num=3):
+        self.name = 'sma'
         self.short_num = short_num
         self.long_num = long_num
         self.continue_num = continue_num

@@ -8,27 +8,29 @@ import logging
 import json
 import os
 
-DUMP_FILE_NAME = 'dump_order.txt'
-DUMMY_DATA = './dummy_data/sample2.csv'
-
 
 class Scalping(Runner):
     COMPLETE_ORDER = []
 
-    def __init__(self, trade_operator, debug, debug_operation, algorithm, notify):
-        self.target_profit = 1.005
-        self.loss_profit = 0.995
-        self.size = 0.001
+    def __init__(self, conf, trade_operator, debug,
+                 debug_operation, algorithm, notify):
+        self.target_profit = conf.getfloat('Scalping/target')
+        self.loss_profit = conf.getfloat('Scalping/loss')
+        self.size = conf.getfloat('Scalping/size')
+        self.dump_file_name = conf.get('Runner/dump_file', 'dump_order.txt')
+
         self.minute_limit = 5
+
         self.trade_operator = trade_operator
-        self.candles = candles.get_init_candles(debug, DUMMY_DATA)
-        self.orders = self.init_server_order(debug, DUMP_FILE_NAME)
-        self.algorithm = algorithm
-        self.db = database.DB('../auto_trade.db', 'trade',
-                              Order.k, Order.k_t, 'id')
         self.debug = debug
         self.debug_operation = debug_operation
+        self.algorithm = algorithm
         self.notify = notify
+
+        self.candles = candles.get_init_candles()
+        self.orders = self.init_server_order(debug)
+        self.db = database.DB('../auto_trade.db', 'trade',
+                              Order.k, Order.k_t, 'id')
 
     def auto_trade(self):
         current_price = candles.get_current_price(self.debug, bitflyer)
@@ -52,8 +54,8 @@ class Scalping(Runner):
             else:
                 self.sell_operate(order, current_price)
 
-        if len(self.candles) > 500:
-            self.candles = self.candles[-100:]
+        if len(self.candles) > 10000:
+            self.candles = self.candles[-5000:]
         self.dump_order()
 
     def trim_finished_order(self):
@@ -70,7 +72,7 @@ class Scalping(Runner):
             if not order.is_sellable(price, self.target_profit):
                 continue
 
-            if price > self.candles[-2]:
+            if price > self.candles.iloc[-2]['Close']:
                 continue
             return order
         for order in reversed(self.orders):
@@ -115,10 +117,10 @@ class Scalping(Runner):
     def close(self):
         self.db.close()
 
-    def init_server_order(self, debug=False, DUMP_FILE_NAME=''):
+    def init_server_order(self, debug=False):
         res = []
-        if os.path.exists(DUMP_FILE_NAME):
-            load_json = json.load(open(DUMP_FILE_NAME))
+        if os.path.exists(self.dump_file_name):
+            load_json = json.load(open(self.dump_file_name))
             for order in load_json:
                 res.append(Order(**order))
             self.remove_no_exist_pair_id(res)
@@ -206,5 +208,5 @@ class Scalping(Runner):
             return
 
         order_dicts = [x.to_dict() for x in self.orders]
-        with open(DUMP_FILE_NAME, 'w') as fout:
+        with open(self.dump_file_name, 'w') as fout:
             fout.write(json.dumps(order_dicts))

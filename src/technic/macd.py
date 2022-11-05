@@ -5,6 +5,7 @@ import pandas as pd
 
 class Macd(Algorithm):
     def __init__(self, short_span=12, long_span=26, mid_span=9, is_output=False):
+        self.name = 'macd'
         self.mid_span = mid_span
         self.short_span = short_span
         self.long_span = long_span
