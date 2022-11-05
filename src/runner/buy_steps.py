@@ -1,5 +1,3 @@
-from candles import candles
-from db import database
 from order import Order
 from .runner import Runner
 from trader import bitflyer
@@ -13,29 +11,14 @@ class BuySteps(Runner):
 
     def __init__(self, conf, trade_operator, debug,
                  debug_operation, algorithm, notify):
-        self.target_profit = conf.getfloat('Steps/target')
-        self.size = conf.getfloat('Steps/size')
+        super().__init__(conf['Steps'], trade_operator,
+                         debug, debug_operation, algorithm, notify)
         self.max_buy = conf.getint('Steps/max_buy')
         self.buy_max_price = 6000000
-        self.dump_file_name = conf.get('Runner/dump_file', 'dump_order.txt')
-
-        self.trade_operator = trade_operator
-        self.debug = debug
-        self.debug_operation = debug_operation
-        self.algorithm = algorithm
-        self.notify = notify
-
-        self.candles = candles.get_init_candles()
-        self.orders = self.init_server_order(debug)
-        self.db = database.DB('../auto_trade.db', 'trade',
-                              Order.k, Order.k_t, 'id')
 
     def auto_trade(self):
-        current_price = candles.get_current_price(self.debug, bitflyer)
-        self.candles = self.candles.append(
-            {'Close': current_price}, ignore_index=True)
-        self.update_order_state(self.orders, self.db, self.debug)
-        self.trim_finished_order()
+        self.pre_trade()
+        current_price = self.candles[-1]['Close']
 
         result_flg = self.algorithm.get_result(self.candles, 'Close')
         if result_flg['buy_flg']:
