@@ -8,21 +8,21 @@ import urllib
 
 API_KEY = ''
 API_SECRET = ''
+MARKET = ''
 
 base_url = 'https://api.bitflyer.com'
 
 
-def set_api_key_secret(api_key, api_secret):
-    global API_KEY, API_SECRET
+def set_api_key_secret(market, api_key, api_secret):
+    global API_KEY, API_SECRET, MARKET
     API_KEY = api_key
     API_SECRET = api_secret
+    MARKET = market
 
 
-def set_api_key_secret_file(fname):
+def set_api_key_secret_file(market, fname):
     api_key, api_secret = open(fname).read().split('\n')[0:2]
-    global API_KEY, API_SECRET
-    API_KEY = api_key
-    API_SECRET = api_secret
+    set_api_key_secret(market, api_key, api_secret)
 
 
 def send_request(method, endpoint, body=None):
@@ -57,12 +57,6 @@ def get_sign(timestamp, method, endpoint, body=None):
 def get_header(method: str, endpoint: str, body: dict) -> dict:
     timestamp = str(time.time())
     signature = get_sign(timestamp, method, endpoint, body)
-    # headers = {
-    #     'Content-Type': 'application/json',
-    #     'ACCESS-KEY': settings.api_key,
-    #     'ACCESS-TIMESTAMP': timestamp,
-    #     'ACCESS-SIGN': signature
-    # }
     headers = {
         'Content-Type': 'application/json',
         'ACCESS-KEY': API_KEY,
@@ -78,7 +72,9 @@ def get_balance():
     return send_request('GET', endpoint)
 
 
-def get_board(market='BTC_JPY'):
+def get_board(market=None):
+    if market is None:
+        market = market
     endpoint = '/v1/getboard'
     body = {
         'product_code': market
@@ -91,7 +87,9 @@ def get_executions(**body):
     return send_request('GET', endpoint, body)
 
 
-def get_parentorder(market='BTC_JPY'):
+def get_parentorder(market=None):
+    if market is None:
+        market = MARKET
     endpoint = '/v1/me/getparentorders'
     body = {
         'product_code': market
@@ -99,7 +97,9 @@ def get_parentorder(market='BTC_JPY'):
     return send_request('GET', endpoint, body)
 
 
-def get_childorder(market='BTC_JPY', child_order_acceptance_id=None, **kargs):
+def get_childorder(market=None, child_order_acceptance_id=None, **kargs):
+    if market is None:
+        market = MARKET
     endpoint = '/v1/me/getchildorders'
     body = {
         'product_code': market
@@ -110,7 +110,9 @@ def get_childorder(market='BTC_JPY', child_order_acceptance_id=None, **kargs):
     return send_request('GET', endpoint, body)
 
 
-def get_tradding_comission(market='BTC_JPY'):
+def get_tradding_comission(market=None):
+    if market is None:
+        market = MARKET
     endpoint = '/v1/me/gettradingcommission'
     body = {
         'product_code': market
@@ -118,7 +120,9 @@ def get_tradding_comission(market='BTC_JPY'):
     return send_request('GET', endpoint, body)
 
 
-def send_order(product_code='BTC_JPY', side=None, child_order_type='LIMIT', price=None, size=None,  minute_limit=300):
+def send_order(product_code=None, side=None, child_order_type='LIMIT', price=None, size=None,  minute_limit=300):
+    if market is None:
+        market = MARKET
     if price is None or size is None or side is None:
         return {}
 
