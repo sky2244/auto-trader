@@ -58,18 +58,15 @@ def main_loop():
     args = parse_arg()
     config = parse_config(args.config_file)
 
+    market = config.get('Default/market', 'BTC_JPY')
     bitflyer.set_api_key_secret_file(
-        os.path.join(os.environ['HOME'], '.bitflyer_token'))
+        market, os.path.join(os.environ['HOME'], '.bitflyer_token'))
     trade_operator = Operator(bitflyer, args.debug or args.debug_operation)
 
     algorithm_name = config.get('Algorithm/name', 'bb')
-    if args.algorithm is not None:
-        algorithm_name = args.algorithm
     algorithm = select_technic.get_algorithm(algorithm_name.lower())
 
     runner_name = config.get('Runner/name', 'scalping')
-    if args.runner is not None:
-        runner_name = args.runner
     runner = select_runner.get_runner(runner_name.lower())(
         trade_operator, args.debug, args.debug_operation,
         algorithm, send_line_message(args.debug))
@@ -119,11 +116,6 @@ def parse_config(config_file):
 
 def parse_arg():
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--algorithm', default='BB',
-                        help='select trade algorithm')
-    parser.add_argument('--runner', default='buy_steps', help='select runner')
-    parser.add_argument('--sleep', default=30, type=int,
-                        help='trader run span(seconds)')
     parser.add_argument('--debug', default=False,
                         action='store_true', help='Run debug mode')
     parser.add_argument('--debug-operation', default=False,
