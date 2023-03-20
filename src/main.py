@@ -58,26 +58,26 @@ def main_loop():
     args = parse_arg()
     config = parse_config(args.config_file)
 
-    market = config.get('Default/market', 'BTC_JPY')
+    market = config.defaults()['market']
     bitflyer.set_api_key_secret_file(
         market, os.path.join(os.environ['HOME'], '.bitflyer_token'))
     trade_operator = Operator(bitflyer, args.debug or args.debug_operation)
 
-    algorithm_name = config.get('Algorithm/name', 'bb')
+    algorithm_name = config.get('Algorithm', 'name')
     algorithm = select_technic.get_algorithm(algorithm_name.lower())
 
-    runner_name = config.get('Runner/name', 'scalping')
+    runner_name = config.get('Runner', 'name')
     runner = select_runner.get_runner(runner_name.lower())(
-        trade_operator, args.debug, args.debug_operation,
+        config, trade_operator, args.debug, args.debug_operation,
         algorithm, send_line_message(args.debug))
 
     logging.debug(f'select algorithm is {algorithm.name}')
 
     viewer.set_runner(runner)
-    is_run_view = (not args.debug) and config.getboolean('View/run', False)
+    is_run_view = (not args.debug) and config.getboolean('View', 'run')
 
     try:
-        sleep_second = int(config.get('Default/sleep', 0))
+        sleep_second = int(config.defaults()['sleep'])
         if args.debug:
             sleep_second = 0
         run(is_run_view, runner, sleep_second, args.debug)
@@ -96,13 +96,13 @@ def main_loop():
 def send_line_message(debug):
     line_notify = LineNotify()
 
-    def send_message(msg):
+    def send_message(msg, level):
         logging.info(msg)
         output_log = '%s: %s' % (datetime.fromtimestamp(time.time()), msg)
         print(output_log)
         try:
             if not debug:
-                line_notify.send(output_log)
+                line_notify.send(output_log, level)
         except Exception as e:
             print('notify error', e.message)
     return send_message

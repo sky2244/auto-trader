@@ -10,9 +10,9 @@ from trader import bitflyer
 class Runner:
     def __init__(self, conf, trade_operator, debug,
                  debug_operation, algorithm, notify):
-        self.size = conf.getfloat('size')
-        self.target_profit = conf.getfloat('target')
-        self.dump_file_name = conf.get('Runner/dump_file', 'dump_order.txt')
+        self.size = conf.getfloat('Runner', 'size')
+        self.target_profit = conf.getfloat('Runner', 'target')
+        self.dump_file_name = conf.get('Runner', 'dump_file')
 
         self.trade_operator = trade_operator
         self.debug = debug
@@ -21,7 +21,7 @@ class Runner:
         self.notify = notify
 
         self.candles = candles.get_init_candles()
-        self.orders = self.init_server_order(debug)
+        self.orders = self.init_server_order()
         self.db = database.DB('../auto_trade.db', 'trade',
                               Order.k, Order.k_t, 'id')
 

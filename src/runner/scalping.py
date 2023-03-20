@@ -6,15 +6,15 @@ class Scalping(Runner):
 
     def __init__(self, conf, trade_operator, debug,
                  debug_operation, algorithm, notify):
-        super().__init__(conf['Scalping'], trade_operator,
+        super().__init__(conf, trade_operator,
                          debug, debug_operation, algorithm, notify)
-        self.loss_profit = conf.getfloat('Scalping/loss')
+        self.loss_profit = conf.getfloat('Scalping', 'loss')
 
         self.minute_limit = 5
 
     def auto_trade(self):
         self.pre_trade()
-        current_price = self.candles[-1]['Close']
+        current_price = self.candles.iloc[-1]['Close']
 
         if len(self.orders) == 0:
             result_flg = self.algorithm.get_result(self.candles, 'Close')
@@ -55,4 +55,5 @@ class Scalping(Runner):
                 f"Not Sell request on "
                 f"the market current:{current_price}, "
                 f"last buy:{min_buy_price} "
-                f"{(current_price / min_buy_price):2f}")
+                f"{(current_price / min_buy_price):2f}",
+                "DEBUG")

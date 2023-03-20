@@ -74,7 +74,7 @@ def get_balance():
 
 def get_board(market=None):
     if market is None:
-        market = market
+        market = MARKET
     endpoint = '/v1/getboard'
     body = {
         'product_code': market
@@ -121,8 +121,8 @@ def get_tradding_comission(market=None):
 
 
 def send_order(product_code=None, side=None, child_order_type='LIMIT', price=None, size=None,  minute_limit=300):
-    if market is None:
-        market = MARKET
+    if product_code is None:
+        product_code = MARKET
     if price is None or size is None or side is None:
         return {}
 

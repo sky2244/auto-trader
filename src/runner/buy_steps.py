@@ -8,7 +8,7 @@ class BuySteps(Runner):
                  debug_operation, algorithm, notify):
         super().__init__(conf['Steps'], trade_operator,
                          debug, debug_operation, algorithm, notify)
-        self.max_buy = conf.getint('Steps/max_buy')
+        self.max_buy = conf.getint('Steps', 'max_buy')
         self.buy_max_price = 6000000
 
     def auto_trade(self):
@@ -61,4 +61,5 @@ class BuySteps(Runner):
                 f"Not Sell request on "
                 f"the market current:{current_price}, "
                 f"last buy:{min_buy_price} "
-                f"{(current_price / min_buy_price):2f}")
+                f"{(current_price / min_buy_price):2f}",
+                "DEBUG")

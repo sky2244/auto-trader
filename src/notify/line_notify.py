@@ -1,5 +1,6 @@
 import requests
 import os
+import logging
 
 
 class LineNotify:
@@ -15,6 +16,9 @@ class LineNotify:
             "Authorization": f"Bearer {self.line_notify_token}"
         }
 
-    def send(self, msg):
-        msg = {"message": f" {msg}"}
-        requests.post(self.line_notify_api, headers=self.headers, data=msg)
+    def send(self, msg, level='INFO'):
+        if level == 'INFO':
+            msg = {"message": f" {msg}"}
+            requests.post(self.line_notify_api, headers=self.headers, data=msg)
+        else:
+            logging.debug(msg)
